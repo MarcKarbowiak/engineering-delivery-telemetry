@@ -6,12 +6,12 @@ Source-agnostic Delivery Intelligence platform implementing DORA metrics, teleme
 
 ```mermaid
 flowchart LR
-  Telemetry[Telemetry Source (simulated)] --> Normalizer[Event Normalizer]
-  Normalizer --> Store[(SQLite Event Store)]
-  Store --> Dora[DORA Engine\nPure Functions]
-  Dora --> Reporting[Reporting Engine]
-  Reporting --> Api[Fastify API]
-  Api --> Dash[React Dashboard]
+  Telemetry["Telemetry Source (simulated)"] --> Normalizer["Event Normalizer"]
+  Normalizer --> Store[("SQLite Event Store")]
+  Store --> Dora["DORA Engine<br/>Pure Functions"]
+  Dora --> Reporting["Reporting Engine"]
+  Reporting --> Api["Fastify API"]
+  Api --> Dash["React Dashboard"]
 ```
 
 ## Repository Structure
