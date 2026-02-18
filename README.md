@@ -1,179 +1,121 @@
 # Engineering Delivery Telemetry
 
-![DORA Metrics](https://img.shields.io/badge/DORA-Metrics-blue)
-![Fastify](https://img.shields.io/badge/Fastify-TypeScript-black)
-![SQLite](https://img.shields.io/badge/SQLite-Persistence-lightgrey)
-![Dockerized](https://img.shields.io/badge/Docker-Ready-blue)
-![Modular Architecture](https://img.shields.io/badge/Architecture-Modular-brightgreen)
+Source-agnostic Delivery Intelligence platform implementing DORA metrics, telemetry normalization, and executive reporting.
 
-Source-agnostic delivery intelligence platform implementing DORA metrics, telemetry normalization, and executive reporting.
-
-This project demonstrates how to design, compute, and operationalize engineering delivery metrics using a clean domain model, modular architecture, and mathematically correct DORA implementations.
-
-The system is intentionally telemetry-source independent and designed for future adapters (Azure DevOps, GitHub, Jira, etc.).
-
----
-
-## 🛡 What This Repository Demonstrates
-
-- Canonical delivery event model
-- Strict separation of ingestion, storage, and metric computation
-- Mathematically correct DORA metric implementation
-- SQLite-backed event store
-- Fastify-based API layer
-- Executive summary engine (metrics → insight → recommendation)
-- Dockerized full-stack local environment
-- Extensible adapter architecture
-
-This is a delivery intelligence reference system — not just a dashboard.
-
----
-
-## 📊 Implemented DORA Metrics
-
-### Deployment Frequency
-Count of successful deployments within a defined time window.
-
-### Lead Time for Changes
-Time from commit to production deployment (mean, median, P95).
-
-### Change Failure Rate
-Failed deployments ÷ total deployments.
-
-### Mean Time to Recovery (MTTR)
-Average time from incident opened to incident resolved.
-
-Formal definitions and calculation details are documented in `/docs/dora-math.md`.
-
----
-
-## 🏗 Architecture Overview
+## Architecture
 
 ```mermaid
 flowchart LR
-
-Telemetry[Telemetry Source] --> Normalizer[Event Normalizer]
-Normalizer --> Store[(SQLite Event Store)]
-Store --> DoraEngine[DORA Engine\n(Pure Functions)]
-DoraEngine --> Reporting[Reporting Engine]
-Reporting --> API[Fastify API]
-API --> Dashboard[React Dashboard]
+  Telemetry[Telemetry Source (simulated)] --> Normalizer[Event Normalizer]
+  Normalizer --> Store[(SQLite Event Store)]
+  Store --> Dora[DORA Engine\nPure Functions]
+  Dora --> Reporting[Reporting Engine]
+  Reporting --> Api[Fastify API]
+  Api --> Dash[React Dashboard]
 ```
 
-### Design Principles
+## Repository Structure
 
-1. **Source Agnostic** — Metrics are independent of ingestion source.
-2. **Pure Computation Layer** — DORA engine has no database or HTTP coupling.
-3. **Extensible** — Future adapters plug into canonical event model.
-4. **Operationally Meaningful** — Metrics drive executive insights, not vanity charts.
-
----
-
-## 🗂 Repository Structure
-
-```
+```text
 /apps
-  /api               # Fastify API
-  /dashboard         # React dashboard
+  /api
+  /dashboard
 /packages
-  /event-model       # Canonical delivery event definitions
-  /dora-engine       # Pure metric computation logic
-  /reporting-engine  # Executive insight generation
-  /storage-sqlite    # SQLite persistence layer
+  /event-model
+  /dora-engine
+  /reporting-engine
+  /storage-sqlite
 /docs
   architecture.md
   dora-math.md
 /docker
-  docker-compose.yml
+  api.Dockerfile
+  dashboard.Dockerfile
+docker-compose.yml
+README.md
 ```
 
----
+## Core Contracts
 
-## 🚀 Run Locally
+Canonical event model in `packages/event-model/src/index.ts`:
 
-### Requirements
+- `DeliveryEventType`
+  - `commit`
+  - `pr_merged`
+  - `deployment_started`
+  - `deployment_succeeded`
+  - `deployment_failed`
+  - `incident_opened`
+  - `incident_resolved`
+- `DeliveryEvent`
+  - `id`, `type`, `timestamp`, `service`, optional `environment`, `commitId`, `correlationId`
 
-- Docker
-- Node 18+
+SQLite table: `delivery_events`
 
-```bash
-docker compose up
-```
+- `id TEXT PRIMARY KEY`
+- `type TEXT NOT NULL`
+- `timestamp DATETIME NOT NULL`
+- `service TEXT NOT NULL`
+- `environment TEXT`
+- `commitId TEXT`
+- `correlationId TEXT`
+- Index: `(type, timestamp)`
 
-The system starts:
+## API Endpoints
 
-- Fastify API
-- React dashboard
-- SQLite persistence volume
-
-Generate sample data:
-
-```bash
-POST /seed
-```
-
----
-
-## 🔎 API Endpoints
-
+- `GET /health`
 - `GET /metrics`
 - `GET /metrics?window=7d`
 - `GET /summary`
 - `POST /seed`
-- `GET /health`
 
----
+## Local Run (Node)
 
-## 📈 Executive Reporting
-
-The reporting engine transforms raw DORA metrics into structured insights:
-
-- Trend detection
-- Delta percentage calculation
-- Heuristic-based recommendations
-
-Example output:
-
-> Deployment frequency increased 18% week-over-week.
-> Change failure rate decreased from 12% to 7%.
-> MTTR remains elevated — consider improving rollback automation.
-
-This layer demonstrates leadership-level interpretation of engineering telemetry.
-
----
-
-## 📐 Extensibility Model
-
-Future adapters implement a simple interface:
-
-```ts
-interface TelemetrySource {
-  fetchEvents(): Promise<DeliveryEvent[]>;
-}
+```bash
+npm install
+npm run dev:api
+npm run dev:dashboard
 ```
 
-Adapters can be added for:
+Seed simulated telemetry:
 
-- Azure DevOps
-- GitHub
-- Jira
-- GitLab
+```bash
+curl -X POST http://localhost:3000/seed
+```
 
-No changes are required in the DORA engine.
+## Docker Run
 
----
+```bash
+docker compose up --build
+```
 
-## 🎯 Intended Audience
+Services:
 
-- Engineering Managers
-- Principal / Staff Engineers
-- Platform Engineers
-- DevEx teams
-- Delivery-focused technical leaders
+- API: `http://localhost:3000`
+- Dashboard: `http://localhost:5173`
 
----
+## Test
 
-## 📌 Status
+```bash
+npm run test
+```
 
-Reference implementation evolving in staged commits to demonstrate architectural progression and delivery system design.
+DORA pure-function tests are under `packages/dora-engine/test`.
 
+## Separation Of Concerns
+
+- No persistence logic inside DORA computations.
+- No HTTP logic inside metric math.
+- Ingestion normalization is separate from storage.
+- API orchestrates storage + engines only.
+
+## Staged Implementation Mapping
+
+1. Monorepo scaffold + base structure
+2. Canonical event model + SQLite storage
+3. Pure DORA engine + unit tests
+4. Reporting engine
+5. Fastify API
+6. React dashboard
+7. Docker support
+8. Documentation polish
