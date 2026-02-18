@@ -1,0 +1,15 @@
+{
+  "name": "@packages/reporting-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@packages/dora-engine": "1.0.0"
+  },
+  "scripts": {
+    "test": "tsc -p tsconfig.test.json && node dist-test/test/reporting-engine.test.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log*
+*.log
+.env
+.env.*
+dist
+dist-test
+coverage
+data
+.DS_Store
+packages/dora-engine/vitest.config.ts
