@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: delivery-intelligence-api
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      DB_PATH: /app/data/delivery-events.db
+    volumes:
+      - sqlite-data:/app/data
+    ports:
+      - "3000:3000"
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/dashboard.Dockerfile
+    container_name: delivery-intelligence-dashboard
+    environment:
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+
+volumes:
+  sqlite-data:
